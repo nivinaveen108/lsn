@@ -1,11 +1,16 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Glass Audio Player with Themes, Dark Mode, Third Language</title>
+<title>Glass Audio Player — Mahāprāṇa Highlighting (Underline)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+:root{
+  --mah-color: #ffcc33; /* default highlight color (gold) */
+}
+
+/* Basic page styles (kept from your theme) */
 body {
     margin: 0;
     padding: 40px;
@@ -55,10 +60,28 @@ button:hover, select:hover { background: rgba(255,255,255,0.35); }
 select option { color: #000; background: #fff; }
 input[type=range] { width:200px; }
 
-#sub1,#sub2,#sub3 { font-size:28px; margin-top:25px; white-space:pre-line; transition:color 0.5s,font-size 0.3s; }
+#sub1,#sub2,#sub3 { font-size:28px; margin-top:25px; white-space:pre-line; transition:color 0.5s,font-size 0.3s; line-height:1.4; }
 #sub2,#sub3 { font-size:22px; color:#ddd; }
 
-.checkbox-container, .font-controls, .theme-controls, .seek-container { margin-top:15px; font-size:16px; display:flex; justify-content:center; align-items:center; gap:10px; }
+.checkbox-container, .font-controls, .theme-controls, .seek-container, .highlight-controls {
+    margin-top:15px; font-size:16px;
+    display:flex; justify-content:center; align-items:center; gap:10px;
+}
+
+/* Mahaprana underline style (Option C) */
+.mahapraana {
+    font-weight: bold;
+    color: var(--mah-color);   /* Mahāprāṇa highlight color */
+    display: inline;
+    line-height: 1.2;
+    padding: 0;
+    margin: 0;
+}
+
+/* small UI tweaks */
+.color-swatch { width:20px; height:20px; border-radius:4px; display:inline-block; border:1px solid rgba(0,0,0,0.2); cursor:pointer; }
+.preset-btn { padding:6px 8px; border-radius:6px; cursor:pointer; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); }
+
 </style>
 </head>
 
@@ -72,10 +95,12 @@ input[type=range] { width:200px; }
     <div class="controls">
         <button id="playPause">Play</button>
         <button id="muteBtn">Mute</button>
+
         <div>
             <label>Volume</label><br>
             <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
         </div>
+
         <div>
             <label>Speed</label><br>
             <input type="range" id="speed" min="0.5" max="2" step="0.1" value="1">
@@ -89,15 +114,17 @@ input[type=range] { width:200px; }
         <span id="remaining">0:00</span>
     </div>
 
-    <!-- Language Options -->
+    <!-- Language + Font + Highlight controls -->
     <div class="checkbox-container">
         <input type="checkbox" id="showEnglish">
         <label for="showEnglish">English</label>
+
         <input type="checkbox" id="showOtherLang">
         <label for="showOtherLang">Other Language</label>
+
         <select id="otherLangSelect">
-            <option value="tamil">Tamil</option>
             <option value="malayalam">Malayalam</option>
+            <option value="tamil">Tamil</option>
         </select>
 
         <select id="fontSelect">
@@ -121,9 +148,24 @@ input[type=range] { width:200px; }
         <button id="darkModeToggle">Dark Mode</button>
     </div>
 
+    <!-- Highlight Controls -->
+    <div class="highlight-controls">
+        <input type="checkbox" id="mahToggle" >
+        <label for="mahToggle">Mahāprāṇa Highlight</label>
+
+        <label style="margin-left:8px;">Highlight Color</label>
+        <input type="color" id="mahColorPicker" value="#ffcc33">
+
+        <!-- quick presets -->
+        <div class="preset-btn" data-color="#ffcc33" title="Gold">Gold</div>
+        <div class="preset-btn" data-color="#ff6666" title="Red">Red</div>
+        <div class="preset-btn" data-color="#66b3ff" title="Blue">Blue</div>
+        <div class="preset-btn" data-color="#7CFC00" title="Green">Green</div>
+    </div>
+
     <!-- Subtitles -->
     <div id="sub1" style="font-family:'Noto Serif Devanagari', serif;"></div>
-    <div id="sub2" style="font-family:'Noto Serif Devanagari', serif;"></div>
+    <div id="sub2" style="font-family:system-ui, sans-serif;"></div>
     <div id="sub3" style="font-family:'Noto Serif Tamil, Noto Serif Malayalam, serif';"></div>
 
 </div>
@@ -131,123 +173,237 @@ input[type=range] { width:200px; }
 <div id="ytPlayer" style="display:none;"></div>
 
 <script>
-// --- Config ---
+// ------------------------------
+// Config / Files
+// ------------------------------
 const VIDEO_ID = "PGRhM77OSU0";
 const DEVANAGARI_VTT = "LSN_Devanagari_output.vtt";
 const ENGLISH_VTT = "LSN_English_output.vtt";
 const THIRD_LANG_VTT = { tamil: "LSN_Tamil_output.vtt", malayalam: "LSN_Malayalam_output.vtt" };
 
-let cues1=[], cues2=[], cues3=[];
-let ytPlayer=null;
-let darkMode=false;
+let cues1 = [], cues2 = [], cues3 = [];
+let ytPlayer = null;
+let darkMode = false;
 
-// --- YouTube API ---
-let tag=document.createElement("script");
-tag.src="https://www.youtube.com/iframe_api";
+// ------------------------------
+// Load YouTube API
+// ------------------------------
+let tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
 document.head.appendChild(tag);
 
 function onYouTubeIframeAPIReady(){
-    ytPlayer=new YT.Player("ytPlayer",{
+    ytPlayer = new YT.Player("ytPlayer",{
         height:"0", width:"0", videoId:VIDEO_ID,
         playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,modestbranding:1,rel:0,enablejsapi:1,origin:"https://www.youtube.com"}
     });
 }
 
-// --- Utilities ---
-function toSec(t){const [h,m,s]=t.split(":"); return (+h*3600)+(+m*60)+parseFloat(s);}
+// ------------------------------
+// Utilities: parse VTT + to seconds
+// ------------------------------
+function toSec(t){ const [h,m,s] = t.split(":"); return (+h*3600) + (+m*60) + parseFloat(s); }
+
 function parseVTT(text, cueList){
-    const lines=text.split(/\r?\n/); cueList.length=0; let cue=null;
-    const timeRe=/(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})/;
-    for(let l of lines){
-        l=l.trim();
-        if(timeRe.test(l)){const [,start,end]=l.match(timeRe); cue={start:toSec(start),end:toSec(end),text:""};}
-        else if(l===""){if(cue){cueList.push(cue); cue=null;} }
-        else if(cue){cue.text+=l+"\n";}
+    const lines = text.split(/\r?\n/);
+    cueList.length = 0;
+    let cue = null;
+    const timeRe = /(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})/;
+    for (let l of lines){
+        l = l.trim();
+        if (timeRe.test(l)){
+            const [, start, end] = l.match(timeRe);
+            cue = { start: toSec(start), end: toSec(end), text: "" };
+        } else if (l === ""){
+            if (cue) { cueList.push(cue); cue = null; }
+        } else if (cue){
+            cue.text += (cue.text ? "\n" : "") + l;
+        }
     }
 }
 
-// Load VTT files
-fetch(DEVANAGARI_VTT).then(r=>r.text()).then(txt=>parseVTT(txt,cues1)).catch(console.error);
-fetch(ENGLISH_VTT).then(r=>r.text()).then(txt=>parseVTT(txt,cues2)).catch(console.error);
+// ------------------------------
+// Load VTTs
+// ------------------------------
+fetch(DEVANAGARI_VTT).then(r => r.text()).then(txt => parseVTT(txt, cues1)).catch(console.error);
+fetch(ENGLISH_VTT).then(r => r.text()).then(txt => parseVTT(txt, cues2)).catch(console.error);
 
 function loadThirdLang(){
-    const lang=document.getElementById("otherLangSelect").value;
-    fetch(THIRD_LANG_VTT[lang]).then(r=>r.text()).then(txt=>parseVTT(txt,cues3)).catch(console.error);
+    const lang = document.getElementById("otherLangSelect").value;
+    fetch(THIRD_LANG_VTT[lang]).then(r => r.text()).then(txt => parseVTT(txt, cues3)).catch(console.error);
 }
 loadThirdLang();
-document.getElementById("otherLangSelect").onchange=loadThirdLang;
+document.getElementById("otherLangSelect").onchange = loadThirdLang;
 
-// --- DOM Elements ---
-const sub1=document.getElementById("sub1"),
-      sub2=document.getElementById("sub2"),
-      sub3=document.getElementById("sub3"),
-      seekBar=document.getElementById("seekBar"),
-      elapsed=document.getElementById("elapsed"),
-      remaining=document.getElementById("remaining");
+// ------------------------------
+// DOM refs
+// ------------------------------
+const sub1 = document.getElementById("sub1"),
+      sub2 = document.getElementById("sub2"),
+      sub3 = document.getElementById("sub3"),
+      seekBar = document.getElementById("seekBar"),
+      elapsed = document.getElementById("elapsed"),
+      remaining = document.getElementById("remaining");
 
 const playPause = document.getElementById("playPause");
 const muteBtn = document.getElementById("muteBtn");
 const volumeSlider = document.getElementById("volume");
 const speedSlider = document.getElementById("speed");
 
-// --- Subtitle Loop ---
-setInterval(() => {
+const mahToggle = document.getElementById("mahToggle");
+const mahColorPicker = document.getElementById("mahColorPicker");
+
+// apply color variable initially
+document.documentElement.style.setProperty('--mah-color', mahColorPicker.value);
+
+// preset buttons
+document.querySelectorAll('.preset-btn').forEach(b=>{
+    b.style.background = b.getAttribute('data-color');
+    b.onclick = () => { mahColorPicker.value = b.getAttribute('data-color'); mahColorPicker.dispatchEvent(new Event('input')); };
+});
+
+// color picker event
+mahColorPicker.addEventListener('input', (e)=>{
+    document.documentElement.style.setProperty('--mah-color', e.target.value);
+});
+
+// ------------------------------
+// Robust Mahāprāṇa highlighting
+// ------------------------------
+const sortByLengthDesc = arr => arr.sort((a,b)=>b.length - a.length);
+
+function highlightMahapraana(text, script='devanagari'){
+    if(!text) return '';
+    text = String(text).normalize('NFC');
+
+    if(!mahToggle.checked) return text;
+
+    const sortByLengthDesc = arr => arr.sort((a,b) => b.length - a.length);
+
+    let patterns = [];
+    switch(script){
+        case 'devanagari':
+            patterns = sortByLengthDesc([
+                  // basic aspirates
+                  'ख','घ','छ','झ','ठ','ढ','थ','ध','फ','भ',
+                  // frequent aspirated clusters / conjuncts
+                  'स्थ','स्थि','स्फ','स्फु','द्भ','द्घ','द्ध','ण्ठ','च्छ','च्छा',
+                  'र्भ','ब्ध','ब्धे','र्थ','ग्ध','न्ध','र्थ्य','र्था'
+            ]);
+            break;
+        case 'malayalam':
+            patterns = sortByLengthDesc([
+                                 // basic aspirates
+                  'ഖ','ഘ','ഛ','ഝ','ഠ','ഢ','ഥ','ധ','ഫ','ഭ',
+                  // variants / clusters
+                  'സ്ഥ','സ്ഥി','സ്ഫ','സ്ഫു','ദ്ഭ','ദ്ഘ','ദ്ധ','ണ്ഠ',
+                  // aspirated CH forms
+                  'ഛാ','ഛ്','സ്വഛ','ഛ്ച','ഛ്ത',
+                  'ർഭ','ബ്ധ','ബ്ധെ','ർഥ','ഗ്ധ','ന്ധ','ര്‍ത്ഥ്യ','ര്‍ത്ഥാ'
+            ]);
+            break;
+        case 'english':
+            patterns = sortByLengthDesc([
+                  'kh','gh','chh','jh','ṭh','ḍh','th','dh','ph','bh',
+                  'stha','sthi','sph','sphu','dbh','ddh','ṇṭh',
+                  'cch','cchā','svacch','rbh','bdh','bdhe','rth','gdh','ndh','rthya','rthā'
+            ]);
+            break;
+     case 'tam': // Tamil Mahāprāṇa-like sequences
+    patterns = sortByLengthDesc([
+  // basic aspirates
+ // 'க்⁴','ங்⁴','ச்⁴','ஞ்⁴','ட்⁴','ண்⁴','த்⁴','ந்⁴','ப்⁴','ம்⁴',
+
+  // frequent aspirated clusters / conjuncts
+ // 'ஸ்த்⁴','ஸ்தி⁴','ஸ்ப்⁴','ஸ்பு⁴','த்ப்⁴','த்க்⁴','த்த்⁴','ண்்த்⁴',
+ // 'ச்⁴ச்⁴','ச்⁴ச்⁴ா',
+ // 'ர்ப்⁴','ப்த்⁴','ப்தே⁴','ர்த்⁴','க்த்⁴','ந்த்⁴','ர்த்ய்⁴','ர்தா⁴'
+
+    ]);
+    break;
+
+        default:
+            return text;
+    }
+
+    const re = new RegExp(patterns.join('|'), script==='english'?'gi':'g');
+    return text.replace(re, m => `<span class="mahapraana">${m}</span>`);
+}
+
+// ------------------------------
+// Subtitle loop
+// ------------------------------
+setInterval(()=>{
     if(!ytPlayer?.getCurrentTime) return;
     const t = ytPlayer.getCurrentTime();
+    const index = cues1.findIndex(c => t>=c.start && t<=c.end);
 
-    const index = cues1.findIndex(c => t >= c.start && t <= c.end);
+    const cue1 = index!==-1 ? cues1[index] : null;
+    const cue2 = index!==-1 ? cues2[index] : null;
+    const cue3 = index!==-1 ? cues3[index] : null;
 
-    sub1.innerText = index !== -1 ? cues1[index].text.trim() : "";
-    sub2.innerText = (document.getElementById("showEnglish").checked && cues2[index]) ? cues2[index].text.trim() : "";
-    sub3.innerText = (document.getElementById("showOtherLang").checked && cues3[index]) ? cues3[index].text.trim() : "";
+    // Devanagari
+    sub1.innerHTML = cue1 ? highlightMahapraana(cue1.text.trim(),'devanagari') : "";
 
+// English
+if(document.getElementById("showEnglish").checked && cue2){
+    sub2.innerHTML = highlightMahapraana(cue2.text.trim(), 'english');
+} else {
+    sub2.innerText = "";
+}
+
+    // Third language
+    const otherOn = document.getElementById("showOtherLang").checked;
+    const lang = document.getElementById("otherLangSelect").value;
+    if(otherOn && cue3){
+        sub3.innerHTML = highlightMahapraana(cue3.text.trim(), lang==='malayalam'?'malayalam':'tam');
+    } else sub3.innerText = "";
+
+    // seek/time
     if(!ytPlayer?.getDuration) return;
     const duration = ytPlayer.getDuration();
     elapsed.innerText = formatTime(t);
     remaining.innerText = formatTime(duration-t);
     seekBar.value = duration ? (t/duration)*100 : 0;
-}, 100);
+}, 120);
 
-// --- Controls ---
+// ------------------------------
+// Controls: play/pause, mute, volume, speed
+// ------------------------------
 playPause.onclick = () => {
-    if (!ytPlayer) return;
-    if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING){
-        ytPlayer.pauseVideo();
-        playPause.innerText = "Play";
-    } else {
-        ytPlayer.playVideo();
-        playPause.innerText = "Pause";
-    }
+    if(!ytPlayer) return;
+    const st = ytPlayer.getPlayerState();
+    if(st === YT.PlayerState.PLAYING){ ytPlayer.pauseVideo(); playPause.innerText="Play"; }
+    else { ytPlayer.playVideo(); playPause.innerText="Pause"; }
 };
 
 muteBtn.onclick = () => {
-    if (!ytPlayer) return;
-    if (ytPlayer.isMuted()){
-        ytPlayer.unMute();
-        muteBtn.innerText = "Mute";
-    } else {
-        ytPlayer.mute();
-        muteBtn.innerText = "Unmute";
-    }
+    if(!ytPlayer) return;
+    if(ytPlayer.isMuted()){ ytPlayer.unMute(); muteBtn.innerText="Mute"; }
+    else { ytPlayer.mute(); muteBtn.innerText="Unmute"; }
 };
 
 volumeSlider.oninput = e => { if(ytPlayer) ytPlayer.setVolume(e.target.value*100); };
 speedSlider.oninput = e => { if(ytPlayer) ytPlayer.setPlaybackRate(parseFloat(e.target.value)); };
 
-// --- Font Controls ---
+// ------------------------------
+// Font controls
+// ------------------------------
 const fontSelect=document.getElementById("fontSelect"),
       fontInc=document.getElementById("fontInc"),
       fontDec=document.getElementById("fontDec");
-let fontSize=28;
-fontSelect.onchange = ()=>{sub1.style.fontFamily=sub2.style.fontFamily=sub3.style.fontFamily=fontSelect.value;};
-fontInc.onclick = ()=>{fontSize+=2; sub1.style.fontSize=sub2.style.fontSize=sub3.style.fontSize=fontSize+"px";};
-fontDec.onclick = ()=>{fontSize-=2;if(fontSize<12)fontSize=12; sub1.style.fontSize=sub2.style.fontSize=sub3.style.fontSize=fontSize+"px";};
+let fontSize = 28;
+fontSelect.onchange = ()=>{ sub1.style.fontFamily = sub2.style.fontFamily = sub3.style.fontFamily = fontSelect.value; };
+fontInc.onclick = ()=>{ fontSize+=2; sub1.style.fontSize=sub2.style.fontSize=sub3.style.fontSize=fontSize+"px"; };
+fontDec.onclick = ()=>{ fontSize-=2; if(fontSize<12) fontSize=12; sub1.style.fontSize=sub2.style.fontSize=sub3.style.fontSize=fontSize+"px"; };
 
-// --- Themes / Dark Mode ---
-const themeSelect=document.getElementById("themeSelect"),
-      darkToggle=document.getElementById("darkModeToggle");
+// ------------------------------
+// Themes/dark mode
+// ------------------------------
+const themeSelect = document.getElementById("themeSelect"),
+      darkToggle = document.getElementById("darkModeToggle");
 
-const themes={
+const themes = {
     glass1:{bg:"linear-gradient(135deg,#0f0f0f,#1b1b1b,#101010)",glass:"rgba(255,255,255,0.12)",text:"#fff",sub:"#fff"},
     sunset:{bg:"linear-gradient(135deg,#ff7e5f,#feb47b)",glass:"rgba(255,255,255,0.18)",text:"#000",sub:"#000"},
     ocean:{bg:"linear-gradient(135deg,#2193b0,#6dd5ed)",glass:"rgba(255,255,255,0.18)",text:"#fff",sub:"#fff"},
@@ -255,31 +411,38 @@ const themes={
 };
 
 function applyTheme(theme){
-    document.body.style.background=theme.bg;
-    document.body.style.color=theme.text;
-    const g=document.querySelector(".glass");
-    g.style.background=theme.glass;
-    g.style.boxShadow=darkMode?"0 8px 40px rgba(0,0,0,0.7)":"0 8px 40px rgba(0,0,0,0.4)";
-    sub1.style.color=sub2.style.color=sub3.style.color=theme.sub;
-    document.querySelectorAll("button, label").forEach(b=>b.style.color=theme.text);
-    document.querySelectorAll("select").forEach(s=>{
-        s.style.background="rgba(255,255,255,0.25)";
-        s.style.color=theme.text==="#fff"?"#fff":"#000";
+    document.body.style.background = theme.bg;
+    document.body.style.color = theme.text;
+    const g = document.querySelector(".glass");
+    g.style.background = theme.glass;
+    g.style.boxShadow = darkMode?"0 8px 40px rgba(0,0,0,0.7)":"0 8px 40px rgba(0,0,0,0.4)";
+    sub1.style.color = sub2.style.color = sub3.style.color = theme.sub;
+    document.querySelectorAll("button, label").forEach(b => b.style.color = theme.text);
+    document.querySelectorAll("select").forEach(s => {
+        s.style.background = "rgba(255,255,255,0.25)";
+        s.style.color = theme.text === "#fff"?"#fff":"#000";
     });
-    document.querySelectorAll("select option").forEach(o=>{
-        o.style.background=theme.text==="#fff"?"#222":"#fff";
-        o.style.color=theme.text==="#fff"?"#fff":"#000";
+    document.querySelectorAll("select option").forEach(o => {
+        o.style.background = theme.text === "#fff"?"#222":"#fff";
+        o.style.color = theme.text === "#fff"?"#fff":"#000";
     });
 }
-themeSelect.onchange = ()=>{darkMode=false; applyTheme(themes[themeSelect.value]);};
-darkToggle.onclick = ()=>{darkMode=!darkMode; if(darkMode) applyTheme({bg:"#0f0f0f",glass:"rgba(0,0,0,0.5)",text:"#fff",sub:"#fff"}); else applyTheme(themes[themeSelect.value]);};
+themeSelect.onchange = ()=>{ darkMode=false; applyTheme(themes[themeSelect.value]); };
+darkToggle.onclick = ()=>{ darkMode=!darkMode; if(darkMode) applyTheme({bg:"#0f0f0f",glass:"rgba(0,0,0,0.5)",text:"#fff",sub:"#fff"}); else applyTheme(themes[themeSelect.value]); };
 
-// --- Seek Helper ---
-function formatTime(seconds){const m=Math.floor(seconds/60); const s=Math.floor(seconds%60); return `${m}:${s.toString().padStart(2,'0')}`;}
-seekBar.oninput = ()=>{if(!ytPlayer?.getDuration)return; const duration=ytPlayer.getDuration(); ytPlayer.seekTo((seekBar.value/100)*duration,true);}
+// ------------------------------
+// Seek helper + formatTime
+// ------------------------------
+function formatTime(seconds){
+    const m = Math.floor(seconds/60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2,"0")}`;
+}
+seekBar.oninput = ()=>{ if(!ytPlayer?.getDuration) return; const duration = ytPlayer.getDuration(); ytPlayer.seekTo((seekBar.value/100)*duration,true); }
 
 // Initial theme
 applyTheme(themes[themeSelect.value]);
+
 </script>
 
 </body>
