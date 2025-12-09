@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Glass Audio Player — Mahāprāṇa Highlighting (Underline)</title>
+<title>Lalithasahasranaamam Audio Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -67,7 +67,50 @@ input[type=range] { width:200px; }
     margin-top:15px; font-size:16px;
     display:flex; justify-content:center; align-items:center; gap:10px;
 }
+.top-buttons button {
+  position: relative;
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.12);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  flex-direction: column;
+}
 
+.top-buttons button:hover {
+  background-color: rgba(255,255,255,0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.7);
+}
+
+.top-buttons .icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-buttons i {
+  font-size: 1.6rem;
+  color: #ffd700; /* golden accent */
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.top-buttons .icon-text {
+  margin-top: 3px;
+  font-size: 0.65rem;
+  color: #fff;
+  letter-spacing: 0.4px;
+  opacity: 0.9;
+  text-align: center;
+}
 /* Mahaprana underline style (Option C) */
 .mahapraana {
     font-weight: bold;
@@ -89,6 +132,7 @@ input[type=range] { width:200px; }
 
 <h1 style="font-weight:600;">Sri Lalithasahasranaamam Player</h1>
 
+
 <div class="glass">
 
     <!-- Audio Controls -->
@@ -105,6 +149,31 @@ input[type=range] { width:200px; }
             <label>Speed</label><br>
             <input type="range" id="speed" min="0.5" max="2" step="0.1" value="1">
         </div>
+
+<div class="top-buttons" style="display:flex; justify-content:center; gap:20px; margin-bottom:20px;">
+  <button id="home-btn" title="Home">
+    <div class="icon-wrapper">
+      <i class="fa-solid fa-house"></i>
+      <span class="icon-text">Home</span>
+    </div>
+  </button>
+
+  <button id="narayaneeyam-btn" title="Nārāyanīyam">
+    <div class="icon-wrapper">
+      <i class="fa-solid fa-book"></i>
+      <span class="icon-text">Nārāyanīyam</span>
+    </div>
+  </button>
+
+  <button id="vishnu-btn" title="Vishnu Sahasranamam">
+    <div class="icon-wrapper">
+      <i class="fa-solid fa-person-praying"></i>
+      <span class="icon-text">Vishnu Sahasranāmam</span>
+    </div>
+  </button>
+</div>
+
+
     </div>
 
     <!-- Seek Bar -->
@@ -234,6 +303,28 @@ function loadThirdLang(){
 }
 loadThirdLang();
 document.getElementById("otherLangSelect").onchange = loadThirdLang;
+
+document.getElementById("home-btn").onclick = () => {
+    window.location.href = "https://www.nivi108.com";
+};
+
+document.getElementById("narayaneeyam-btn").onclick = () => {
+    window.location.href = "https://nivinaveen108.github.io/narayaneeyam/";
+};
+
+document.getElementById("vishnu-btn").onclick = () => {
+    window.location.href = "https://nivinaveen108.github.io/vishnusahasranaamam/";
+};
+
+// Top buttons click handlers
+const homeBtn = document.getElementById("home-btn");
+if(homeBtn) homeBtn.onclick = () => window.location.href = "https://www.nivi108.com";
+
+const narayaneeyamBtn = document.getElementById("narayaneeyam-btn");
+if(narayaneeyamBtn) narayaneeyamBtn.onclick = () => window.location.href = "https://nivinaveen108.github.io/narayaneeyam/";
+
+const vishnuBtn = document.getElementById("vishnu-btn");
+if(vishnuBtn) vishnuBtn.onclick = () => window.location.href = "https://nivinaveen108.github.io/vsn/";
 
 // ------------------------------
 // DOM refs
