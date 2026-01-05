@@ -125,6 +125,22 @@ input[type=range] { width:200px; }
 .color-swatch { width:20px; height:20px; border-radius:4px; display:inline-block; border:1px solid rgba(0,0,0,0.2); cursor:pointer; }
 .preset-btn { padding:6px 8px; border-radius:6px; cursor:pointer; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); }
 
+#seekTooltip{
+  position: absolute;
+  padding: 6px 10px;
+  font-size: 14px;
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -120%);
+  transition: opacity 0.15s;
+  white-space: nowrap;
+  z-index: 999;
+}
+
+
 </style>
 </head>
 
@@ -182,6 +198,8 @@ input[type=range] { width:200px; }
         <input type="range" id="seekBar" min="0" max="100" value="0" style="flex:1;">
         <span id="remaining">0:00</span>
     </div>
+    <div id="seekTooltip"></div>
+
 
     <!-- Language + Font + Highlight controls -->
     <div class="checkbox-container">
@@ -563,6 +581,47 @@ function formatTime(seconds){
 }
 seekBar.oninput = ()=>{ if(!ytPlayer?.getDuration) return; const duration = ytPlayer.getDuration(); ytPlayer.seekTo((seekBar.value/100)*duration,true); }
 
+const seekTooltip = document.getElementById("seekTooltip");
+
+seekBar.addEventListener("mousemove", e => {
+    if (!ytPlayer?.getDuration() || cues1.length === 0) return;
+
+    const rect = seekBar.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    if (percent < 0 || percent > 1) return;
+
+    const time = percent * ytPlayer.getDuration();
+
+    // find verse index
+    const verseIndex = cues1.findIndex(c => time >= c.start && time <= c.end);
+    if (verseIndex === -1) return;
+
+    const verseNo = verseIndex + 1;
+
+    seekTooltip.innerText = `Verse ${verseNo} — click to jump`;
+    seekTooltip.style.left = `${e.clientX}px`;
+    seekTooltip.style.top = `${rect.top}px`;
+    seekTooltip.style.opacity = 1;
+});
+
+seekBar.addEventListener("mouseleave", () => {
+    seekTooltip.style.opacity = 0;
+});
+
+seekBar.addEventListener("click", e => {
+    if (!ytPlayer?.getDuration() || cues1.length === 0) return;
+
+    const rect = seekBar.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const time = percent * ytPlayer.getDuration();
+
+    const cue = cues1.find(c => time >= c.start && time <= c.end);
+    if (cue) {
+        ytPlayer.seekTo(cue.start + 0.01, true);
+    }
+});
+
+
 // Initial theme
 applyTheme(themes[themeSelect.value]);
 
@@ -570,7 +629,3 @@ applyTheme(themes[themeSelect.value]);
 
 </body>
 </html>
-
-
-
-
