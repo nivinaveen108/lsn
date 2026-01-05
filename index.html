@@ -619,7 +619,11 @@ function buildJumpMenu() {
             label = `Dhyānam ${i - DHYANA_START + 1}`;
         } 
         else if (i >= SAHASRA_START) {
-            label = `Verse ${i - SAHASRA_START + 1}`;
+            const verseNum = i - SAHASRA_START + 1;
+
+            if (verseNum > 183) return;   // ⛔ stop at 183
+
+            label = `Verse ${verseNum}`;
         } 
         else return;
 
