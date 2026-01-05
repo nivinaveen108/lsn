@@ -1,0 +1,575 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Lalithasahasranaamam Audio Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --mah-color: #ffcc33; /* default highlight color (gold) */
+}
+
+/* Basic page styles (kept from your theme) */
+body {
+    margin: 0;
+    padding: 40px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #0f0f0f, #1b1b1b, #101010);
+    background-size: 300% 300%;
+    animation: bgshift 20s ease infinite;
+    text-align: center;
+    color: #fff;
+    transition: background 0.5s, color 0.5s;
+}
+@keyframes bgshift { 0% {background-position:0% 50%} 50% {background-position:100% 50%} 100% {background-position:0% 50%} }
+
+.glass {
+    width: 80%;
+    margin: auto;
+    padding: 30px;
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.18);
+    transition: background 0.5s, box-shadow 0.5s;
+}
+
+.controls {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+button, select {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(15px);
+    color: #000;
+    cursor: pointer;
+    transition: 0.2s;
+}
+button:hover, select:hover { background: rgba(255,255,255,0.35); }
+select option { color: #000; background: #fff; }
+input[type=range] { width:200px; }
+
+#sub1,#sub2,#sub3 { font-size:28px; margin-top:25px; white-space:pre-line; transition:color 0.5s,font-size 0.3s; line-height:1.4; }
+#sub2,#sub3 { font-size:22px; color:#ddd; }
+
+.checkbox-container, .font-controls, .theme-controls, .seek-container, .highlight-controls {
+    margin-top:15px; font-size:16px;
+    display:flex; justify-content:center; align-items:center; gap:10px;
+}
+.top-buttons button {
+  position: relative;
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.12);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  flex-direction: column;
+}
+
+.top-buttons button:hover {
+  background-color: rgba(255,255,255,0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.7);
+}
+
+.top-buttons .icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-buttons i {
+  font-size: 1.6rem;
+  color: #ffd700; /* golden accent */
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.top-buttons .icon-text {
+  margin-top: 3px;
+  font-size: 0.65rem;
+  color: #fff;
+  letter-spacing: 0.4px;
+  opacity: 0.9;
+  text-align: center;
+}
+/* Mahaprana underline style (Option C) */
+.mahapraana {
+    font-weight: bold;
+    color: var(--mah-color);   /* Mahāprāṇa highlight color */
+    display: inline;
+    line-height: 1.2;
+    padding: 0;
+    margin: 0;
+}
+
+/* small UI tweaks */
+.color-swatch { width:20px; height:20px; border-radius:4px; display:inline-block; border:1px solid rgba(0,0,0,0.2); cursor:pointer; }
+.preset-btn { padding:6px 8px; border-radius:6px; cursor:pointer; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); }
+
+</style>
+</head>
+
+<body>
+
+<h1 style="font-weight:600;">Sri Lalithasahasranaamam Player</h1>
+
+
+<div class="glass">
+
+    <!-- Audio Controls -->
+    <div class="controls">
+        <button id="playPause">Play</button>
+        <button id="muteBtn">Mute</button>
+
+        <div>
+            <label>Volume</label><br>
+            <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
+        </div>
+
+        <div>
+            <label>Speed</label><br>
+            <input type="range" id="speed" min="0.5" max="2" step="0.1" value="1">
+        </div>
+
+<div class="top-buttons" style="display:flex; justify-content:center; gap:20px; margin-bottom:20px;">
+  <button id="home-btn" title="Home">
+    <div class="icon-wrapper">
+      <i class="fa-solid fa-house"></i>
+      <span class="icon-text">Home</span>
+    </div>
+  </button>
+
+  <button id="narayaneeyam-btn" title="Nārāyanīyam">
+    <div class="icon-wrapper">
+      <i class="fa-solid fa-book"></i>
+      <span class="icon-text">Nārāyanīyam</span>
+    </div>
+  </button>
+
+  <button id="vishnu-btn" title="Vishnu Sahasranamam">
+    <div class="icon-wrapper">
+      <i class="fa-solid fa-person-praying"></i>
+      <span class="icon-text">Vishnu Sahasranāmam</span>
+    </div>
+  </button>
+</div>
+
+
+    </div>
+
+    <!-- Seek Bar -->
+    <div class="seek-container">
+        <span id="elapsed">0:00</span>
+        <input type="range" id="seekBar" min="0" max="100" value="0" style="flex:1;">
+        <span id="remaining">0:00</span>
+    </div>
+
+    <!-- Language + Font + Highlight controls -->
+    <div class="checkbox-container">
+        <input type="checkbox" id="showEnglish">
+        <label for="showEnglish">English</label>
+
+        <input type="checkbox" id="showOtherLang">
+        <label for="showOtherLang">Other Language</label>
+
+        <select id="otherLangSelect">
+            <option value="malayalam">Malayalam</option>
+            <option value="tamil">Tamil</option>
+        </select>
+
+        <select id="fontSelect">
+            <option value="'Noto Serif Devanagari', serif">Noto Serif Devanagari</option>
+            <option value="'Kokila', serif">Kokila</option>
+            <option value="'Samarkan', cursive">Samarkan</option>
+            <option value="'Hind Vadodara', serif">Hind Vadodara</option>
+            <option value="'Sahadeva', serif">Sahadeva</option>
+            <option value="'Lohit Devanagari', serif">Lohit Devanagari</option>
+            <option value="'Tangerine', cursive">Tangerine</option>
+        </select>
+        <button id="fontInc">A+</button>
+        <button id="fontDec">A-</button>
+
+        <select id="themeSelect">
+            <option value="glass1">Apple Glass</option>
+            <option value="sunset">Sunset Gradient</option>
+            <option value="ocean">Ocean Blue</option>
+            <option value="forest">Forest Green</option>
+        </select>
+        <button id="darkModeToggle">Dark Mode</button>
+    </div>
+
+    <!-- Highlight Controls -->
+    <div class="highlight-controls">
+        <input type="checkbox" id="mahToggle" >
+        <label for="mahToggle">Mahāprāṇa Highlight</label>
+
+        <label style="margin-left:8px;">Highlight Color</label>
+        <input type="color" id="mahColorPicker" value="#ffcc33">
+
+        <!-- quick presets -->
+        <div class="preset-btn" data-color="#ffcc33" title="Gold">Gold</div>
+        <div class="preset-btn" data-color="#ff6666" title="Red">Red</div>
+        <div class="preset-btn" data-color="#66b3ff" title="Blue">Blue</div>
+        <div class="preset-btn" data-color="#7CFC00" title="Green">Green</div>
+    </div>
+
+    <!-- Subtitles -->
+    <div id="sub1" style="font-family:'Noto Serif Devanagari', serif;"></div>
+    <div id="sub2" style="font-family:system-ui, sans-serif;"></div>
+    <div id="sub3" style="font-family:'Noto Serif Tamil, Noto Serif Malayalam, serif';"></div>
+
+</div>
+
+<div id="ytPlayer" style="display:none;"></div>
+
+<script>
+// ------------------------------
+// Config / Files
+// ------------------------------
+const VIDEO_ID = "PGRhM77OSU0";
+const DEVANAGARI_VTT = "LSN_Devanagari_output.vtt";
+const ENGLISH_VTT = "LSN_English_output.vtt";
+const THIRD_LANG_VTT = { tamil: "LSN_Tamil_output.vtt", malayalam: "LSN_Malayalam_output.vtt" };
+
+let cues1 = [], cues2 = [], cues3 = [];
+let ytPlayer = null;
+let darkMode = false;
+
+// ------------------------------
+// Load YouTube API
+// ------------------------------
+let tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(tag);
+
+function onYouTubeIframeAPIReady(){
+    ytPlayer = new YT.Player("ytPlayer",{
+        height:"0", width:"0", videoId:VIDEO_ID,
+        playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,modestbranding:1,rel:0,enablejsapi:1,origin:"https://www.youtube.com"}
+    });
+}
+
+// ------------------------------
+// Utilities: parse VTT + to seconds
+// ------------------------------
+function toSec(t){ const [h,m,s] = t.split(":"); return (+h*3600) + (+m*60) + parseFloat(s); }
+
+function parseVTT(text, cueList){
+    const lines = text.split(/\r?\n/);
+    cueList.length = 0;
+    let cue = null;
+    const timeRe = /(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})/;
+    for (let l of lines){
+        l = l.trim();
+        if (timeRe.test(l)){
+            const [, start, end] = l.match(timeRe);
+            cue = { start: toSec(start), end: toSec(end), text: "" };
+        } else if (l === ""){
+            if (cue) { cueList.push(cue); cue = null; }
+        } else if (cue){
+            cue.text += (cue.text ? "\n" : "") + l;
+        }
+    }
+}
+
+// ------------------------------
+// Load VTTs
+// ------------------------------
+fetch(DEVANAGARI_VTT).then(r => r.text()).then(txt => parseVTT(txt, cues1)).catch(console.error);
+fetch(ENGLISH_VTT).then(r => r.text()).then(txt => parseVTT(txt, cues2)).catch(console.error);
+
+function loadThirdLang(){
+    const lang = document.getElementById("otherLangSelect").value;
+    fetch(THIRD_LANG_VTT[lang]).then(r => r.text()).then(txt => parseVTT(txt, cues3)).catch(console.error);
+}
+loadThirdLang();
+document.getElementById("otherLangSelect").onchange = loadThirdLang;
+
+document.getElementById("home-btn").onclick = () => {
+    window.location.href = "https://www.nivi108.com";
+};
+
+document.getElementById("narayaneeyam-btn").onclick = () => {
+    window.location.href = "https://nivinaveen108.github.io/narayaneeyam/";
+};
+
+document.getElementById("vishnu-btn").onclick = () => {
+    window.location.href = "https://nivinaveen108.github.io/vishnusahasranaamam/";
+};
+
+// Top buttons click handlers
+const homeBtn = document.getElementById("home-btn");
+if(homeBtn) homeBtn.onclick = () => window.location.href = "https://www.nivi108.com";
+
+const narayaneeyamBtn = document.getElementById("narayaneeyam-btn");
+if(narayaneeyamBtn) narayaneeyamBtn.onclick = () => window.location.href = "https://nivinaveen108.github.io/narayaneeyam/";
+
+const vishnuBtn = document.getElementById("vishnu-btn");
+if(vishnuBtn) vishnuBtn.onclick = () => window.location.href = "https://nivinaveen108.github.io/vsn/";
+
+// ------------------------------
+// DOM refs
+// ------------------------------
+const sub1 = document.getElementById("sub1"),
+      sub2 = document.getElementById("sub2"),
+      sub3 = document.getElementById("sub3"),
+      seekBar = document.getElementById("seekBar"),
+      elapsed = document.getElementById("elapsed"),
+      remaining = document.getElementById("remaining");
+
+const playPause = document.getElementById("playPause");
+const muteBtn = document.getElementById("muteBtn");
+const volumeSlider = document.getElementById("volume");
+const speedSlider = document.getElementById("speed");
+
+const mahToggle = document.getElementById("mahToggle");
+const mahColorPicker = document.getElementById("mahColorPicker");
+
+// apply color variable initially
+document.documentElement.style.setProperty('--mah-color', mahColorPicker.value);
+
+// preset buttons
+document.querySelectorAll('.preset-btn').forEach(b=>{
+    b.style.background = b.getAttribute('data-color');
+    b.onclick = () => { mahColorPicker.value = b.getAttribute('data-color'); mahColorPicker.dispatchEvent(new Event('input')); };
+});
+
+// color picker event
+mahColorPicker.addEventListener('input', (e)=>{
+    document.documentElement.style.setProperty('--mah-color', e.target.value);
+});
+
+// ------------------------------
+// Robust Mahāprāṇa highlighting
+// ------------------------------
+const sortByLengthDesc = arr => arr.sort((a,b)=>b.length - a.length);
+
+function highlightMahapraana(text, script='devanagari'){
+    if(!text) return '';
+    text = String(text).normalize('NFC');
+
+    if(!mahToggle.checked) return text;
+
+    const sortByLengthDesc = arr => arr.sort((a,b) => b.length - a.length);
+
+    let patterns = [];
+    switch(script){
+        case 'devanagari':
+            patterns = sortByLengthDesc([
+                  // basic aspirates
+                  'ख','घ','छ','झ','ठ','ढ','थ','ध','फ','भ',
+                  // frequent aspirated clusters / conjuncts
+                  'स्थ','स्थि','स्फ','स्फु','द्भ','द्घ','द्ध','ण्ठ','च्छ','च्छा',
+                  'र्भ','ब्ध','ब्धे','र्थ','ग्ध','न्ध','र्थ्य','र्था'
+            ]);
+            break;
+        case 'malayalam':
+            patterns = sortByLengthDesc([
+                                 // basic aspirates
+                  'ഖ','ഘ','ഛ','ഝ','ഠ','ഢ','ഥ','ധ','ഫ','ഭ',
+                  // variants / clusters
+                  'സ്ഥ','സ്ഥി','സ്ഫ','സ്ഫു','ദ്ഭ','ദ്ഘ','ദ്ധ','ണ്ഠ',
+                  // aspirated CH forms
+                  'ഛാ','ഛ്','സ്വഛ','ഛ്ച','ഛ്ത',
+                  'ർഭ','ബ്ധ','ബ്ധെ','ർഥ','ഗ്ധ','ന്ധ','ര്‍ത്ഥ്യ','ര്‍ത്ഥാ'
+            ]);
+            break;
+        case 'english':
+            patterns = sortByLengthDesc([
+                  'kh','gh','chh','jh','ṭh','ḍh','th','dh','ph','bh',
+                  'stha','sthi','sph','sphu','dbh','ddh','ṇṭh',
+                  'cch','cchā','svacch','rbh','bdh','bdhe','rth','gdh','ndh','rthya','rthā'
+            ]);
+            break;
+     case 'tam': // Tamil Mahāprāṇa-like sequences
+    patterns = sortByLengthDesc([
+
+ 'க²','கா²','கி²','கீ²','கு²','கூ²','கெ²','கே²','கை²','கொ²','கோ²','கௌ²',
+  'க⁴','கா⁴','கி⁴','கீ⁴','கு⁴','கூ⁴','கெ⁴','கே⁴','கை⁴','கொ⁴','கோ⁴','கௌ⁴',
+  'ச²','சா²','சி²','சீ²','சு²','சூ²','செ²','சே²','சை²','சொ²','சோ²','சௌ²',
+  'ஜ⁴','ஜா⁴','ஜி⁴','ஜீ⁴','ஜு⁴','ஜூ⁴','ஜெ⁴','ஜே⁴','ஜை⁴','ஜொ⁴','ஜோ⁴','ஜௌ⁴',
+  'ட²','டா²','டி²','டீ²','டு²','டூ²','டெ²','டே²','டை²','டொ²','டோ²','டௌ²',
+  'ட⁴','டா⁴','டி⁴','டீ⁴','டு⁴','டூ⁴','டெ⁴','டே⁴','டை⁴','டொ⁴','டோ⁴','டௌ⁴',
+  'த²','தா²','தி²','தீ²','து²','தூ²','தெ²','தே²','தை²','தொ²','தோ²','தௌ²',
+  'த⁴','தா⁴','தி⁴','தீ⁴','து⁴','தூ⁴','தெ⁴','தே⁴','தை⁴','தொ⁴','தோ⁴','தௌ⁴',
+  'ப²','பா²','பி²','பீ²','பு²','பூ²','பெ²','பே²','பை²','பொ²','போ²','பௌ²',
+  'ப⁴','பா⁴','பி⁴','பீ⁴','பு⁴','பூ⁴','பெ⁴','பே⁴','பை⁴','பொ⁴','போ⁴','பௌ⁴',
+  'ஸ்த²','ஸ்தா²','ஸ்தி²','ஸ்தீ²','ஸ்து²','ஸ்தூ²','ஸ்தெ²','ஸ்தே²','ஸ்தை²','ஸ்தொ²','ஸ்தோ²','ஸ்தௌ²',
+  'ஸ்தி²','ஸ்திா²','ஸ்திி²','ஸ்திீ²','ஸ்திு²','ஸ்திூ²','ஸ்திெ²','ஸ்திே²','ஸ்திை²','ஸ்திொ²','ஸ்திோ²','ஸ்திௌ²',
+  'ஸ்ப²','ஸ்பா²','ஸ்பி²','ஸ்பீ²','ஸ்பு²','ஸ்பூ²','ஸ்பெ²','ஸ்பே²','ஸ்பை²','ஸ்பொ²','ஸ்போ²','ஸ்பௌ²',
+  'ஸ்பு²','ஸ்புா²','ஸ்புி²','ஸ்புீ²','ஸ்புு²','ஸ்புூ²','ஸ்புெ²','ஸ்புே²','ஸ்புை²','ஸ்புொ²','ஸ்புோ²','ஸ்புௌ²',
+  'த்ப²','த்பா²','த்பி²','த்பீ²','த்பு²','த்பூ²','த்பெ²','த்பே²','த்பை²','த்பொ²','த்போ²','த்பௌ²',
+  'த்க²','த்கா²','த்கி²','த்கீ²','த்கு²','த்கூ²','த்கெ²','த்கே²','த்கை²','த்கொ²','த்கோ²','த்கௌ²',
+  'த்த²','த்தா²','த்தி²','த்தீ²','த்து²','த்தூ²','த்தெ²','த்தே²','த்தை²','த்தொ²','த்தோ²','த்தௌ²',
+  'ண்ட²','ண்டா²','ண்டி²','ண்டீ²','ண்டு²','ண்டூ²','ண்டெ²','ண்டே²','ண்டை²','ண்டொ²','ண்டோ²','ண்டௌ²',
+  'சா²','சாா²','சாி²','சாீ²','சாு²','சாூ²','சாெ²','சாே²','சாை²','சாொ²','சாோ²','சாௌ²',
+  'ச்²','ச்ா²','ச்ி²','ச்ீ²','ச்ு²','ச்ூ²','ச்ெ²','ச்ே²','ச்ை²','ச்ொ²','ச்ோ²','ச்ௌ²',
+  'ஸ்வச²','ஸ்வசா²','ஸ்வசி²','ஸ்வசீ²','ஸ்வசு²','ஸ்வசூ²','ஸ்வசெ²','ஸ்வசே²','ஸ்வசை²','ஸ்வசொ²','ஸ்வசோ²','ஸ்வசௌ²',
+  'ச்ச²','ச்சா²','ச்சி²','ச்சீ²','ச்சு²','ச்சூ²','ச்செ²','ச்சே²','ச்சை²','ச்சொ²','ச்சோ²','ச்சௌ²',
+  'ச்த²','ச்தா²','ச்தி²','ச்தீ²','ச்து²','ச்தூ²','ச்தெ²','ச்தே²','ச்தை²','ச்தொ²','ச்தோ²','ச்தௌ²',
+  'ர்ப²','ர்பா²','ர்பி²','ர்பீ²','ர்பு²','ர்பூ²','ர்பெ²','ர்பே²','ர்பை²','ர்பொ²','ர்போ²','ர்பௌ²',
+  'ப்த²','ப்தா²','ப்தி²','ப்தீ²','ப்து²','ப்தூ²','ப்தெ²','ப்தே²','ப்தை²','ப்தொ²','ப்தோ²','ப்தௌ²',
+  'ப்தெ²','ப்தொ²','ப்தெி²','ப்தெீ²','ப்தெு²','ப்தெூ²','ப்தெெ²','ப்தெே²','ப்தெை²','ப்தெொ²','ப்தெோ²','ப்தெௌ²',
+  'ர்த²','ர்தா²','ர்தி²','ர்தீ²','ர்து²','ர்தூ²','ர்தெ²','ர்தே²','ர்தை²','ர்தொ²','ர்தோ²','ர்தௌ²',
+  'க்த²','க்தா²','க்தி²','க்தீ²','க்து²','க்தூ²','க்தெ²','க்தே²','க்தை²','க்தொ²','க்தோ²','க்தௌ²',
+  'ந்த²','ந்தா²','ந்தி²','ந்தீ²','ந்து²','ந்தூ²','ந்தெ²','ந்தே²','ந்தை²','ந்தொ²','ந்தோ²','ந்தௌ²',
+  'ர்த்திய²','ர்த்தியா²','ர்த்தியி²','ர்த்தியீ²','ர்த்தியு²','ர்த்தியூ²','ர்த்தியே²','ர்த்தியே²','ர்த்தியை²','ர்த்தியொ²','ர்த்தியோ²','ர்த்தியௌ²',
+  'ர்த்தா²','ர்த்தாா²','ர்த்தாி²','ர்த்தாீ²','ர்த்தாு²','ர்த்தாூ²','ர்த்தாெ²','ர்த்தாே²','ர்த்தாை²','ர்த்தாொ²','ர்த்தாோ²','ர்த்தாௌ²',      
+  // basic aspirates
+  'க்⁴','ங்⁴','ச்⁴','ஞ்⁴','ட்⁴','ண்⁴','த்⁴','ந்⁴','ப்⁴','ம்⁴', 'க்²' 
+
+  // frequent aspirated clusters / conjuncts
+ // 'ஸ்த்⁴','ஸ்தி⁴','ஸ்ப்⁴','ஸ்பு⁴','த்ப்⁴','த்க்⁴','த்த்⁴','ண்்த்⁴',
+ // 'ச்⁴ச்⁴','ச்⁴ச்⁴ா',
+ // 'ர்ப்⁴','ப்த்⁴','ப்தே⁴','ர்த்⁴','க்த்⁴','ந்த்⁴','ர்த்ய்⁴','ர்தா⁴'
+
+    ]);
+    break;
+
+        default:
+            return text;
+    }
+
+    const re = new RegExp(patterns.join('|'), script==='english'?'gi':'g');
+    return text.replace(re, m => `<span class="mahapraana">${m}</span>`);
+}
+
+// ------------------------------
+// Subtitle loop
+// ------------------------------
+setInterval(()=>{
+    if(!ytPlayer?.getCurrentTime) return;
+    const t = ytPlayer.getCurrentTime();
+    const index = cues1.findIndex(c => t>=c.start && t<=c.end);
+
+    const cue1 = index!==-1 ? cues1[index] : null;
+    const cue2 = index!==-1 ? cues2[index] : null;
+    const cue3 = index!==-1 ? cues3[index] : null;
+
+    // Devanagari
+    sub1.innerHTML = cue1 ? highlightMahapraana(cue1.text.trim(),'devanagari') : "";
+
+// English
+if(document.getElementById("showEnglish").checked && cue2){
+    sub2.innerHTML = highlightMahapraana(cue2.text.trim(), 'english');
+} else {
+    sub2.innerText = "";
+}
+
+    // Third language
+    const otherOn = document.getElementById("showOtherLang").checked;
+    const lang = document.getElementById("otherLangSelect").value;
+    if(otherOn && cue3){
+        sub3.innerHTML = highlightMahapraana(cue3.text.trim(), lang==='malayalam'?'malayalam':'tam');
+    } else sub3.innerText = "";
+
+    // seek/time
+    if(!ytPlayer?.getDuration) return;
+    const duration = ytPlayer.getDuration();
+    elapsed.innerText = formatTime(t);
+    remaining.innerText = formatTime(duration-t);
+    seekBar.value = duration ? (t/duration)*100 : 0;
+}, 120);
+
+// ------------------------------
+// Controls: play/pause, mute, volume, speed
+// ------------------------------
+playPause.onclick = () => {
+    if(!ytPlayer) return;
+    const st = ytPlayer.getPlayerState();
+    if(st === YT.PlayerState.PLAYING){ ytPlayer.pauseVideo(); playPause.innerText="Play"; }
+    else { ytPlayer.playVideo(); playPause.innerText="Pause"; }
+};
+
+muteBtn.onclick = () => {
+    if(!ytPlayer) return;
+    if(ytPlayer.isMuted()){ ytPlayer.unMute(); muteBtn.innerText="Mute"; }
+    else { ytPlayer.mute(); muteBtn.innerText="Unmute"; }
+};
+
+volumeSlider.oninput = e => { if(ytPlayer) ytPlayer.setVolume(e.target.value*100); };
+speedSlider.oninput = e => { if(ytPlayer) ytPlayer.setPlaybackRate(parseFloat(e.target.value)); };
+
+// ------------------------------
+// Font controls
+// ------------------------------
+const fontSelect=document.getElementById("fontSelect"),
+      fontInc=document.getElementById("fontInc"),
+      fontDec=document.getElementById("fontDec");
+let fontSize = 28;
+fontSelect.onchange = ()=>{ sub1.style.fontFamily = sub2.style.fontFamily = sub3.style.fontFamily = fontSelect.value; };
+fontInc.onclick = ()=>{ fontSize+=2; sub1.style.fontSize=sub2.style.fontSize=sub3.style.fontSize=fontSize+"px"; };
+fontDec.onclick = ()=>{ fontSize-=2; if(fontSize<12) fontSize=12; sub1.style.fontSize=sub2.style.fontSize=sub3.style.fontSize=fontSize+"px"; };
+
+// ------------------------------
+// Themes/dark mode
+// ------------------------------
+const themeSelect = document.getElementById("themeSelect"),
+      darkToggle = document.getElementById("darkModeToggle");
+
+const themes = {
+    glass1:{bg:"linear-gradient(135deg,#0f0f0f,#1b1b1b,#101010)",glass:"rgba(255,255,255,0.12)",text:"#fff",sub:"#fff"},
+    sunset:{bg:"linear-gradient(135deg,#ff7e5f,#feb47b)",glass:"rgba(255,255,255,0.18)",text:"#000",sub:"#000"},
+    ocean:{bg:"linear-gradient(135deg,#2193b0,#6dd5ed)",glass:"rgba(255,255,255,0.18)",text:"#fff",sub:"#fff"},
+    forest:{bg:"linear-gradient(135deg,#56ab2f,#a8e063)",glass:"rgba(255,255,255,0.18)",text:"#000",sub:"#000"}
+};
+
+function applyTheme(theme){
+    document.body.style.background = theme.bg;
+    document.body.style.color = theme.text;
+    const g = document.querySelector(".glass");
+    g.style.background = theme.glass;
+    g.style.boxShadow = darkMode?"0 8px 40px rgba(0,0,0,0.7)":"0 8px 40px rgba(0,0,0,0.4)";
+    sub1.style.color = sub2.style.color = sub3.style.color = theme.sub;
+    document.querySelectorAll("button, label").forEach(b => b.style.color = theme.text);
+    document.querySelectorAll("select").forEach(s => {
+        s.style.background = "rgba(255,255,255,0.25)";
+        s.style.color = theme.text === "#fff"?"#fff":"#000";
+    });
+    document.querySelectorAll("select option").forEach(o => {
+        o.style.background = theme.text === "#fff"?"#222":"#fff";
+        o.style.color = theme.text === "#fff"?"#fff":"#000";
+    });
+}
+themeSelect.onchange = ()=>{ darkMode=false; applyTheme(themes[themeSelect.value]); };
+darkToggle.onclick = ()=>{ darkMode=!darkMode; if(darkMode) applyTheme({bg:"#0f0f0f",glass:"rgba(0,0,0,0.5)",text:"#fff",sub:"#fff"}); else applyTheme(themes[themeSelect.value]); };
+
+// ------------------------------
+// Seek helper + formatTime
+// ------------------------------
+function formatTime(seconds){
+    const m = Math.floor(seconds/60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2,"0")}`;
+}
+seekBar.oninput = ()=>{ if(!ytPlayer?.getDuration) return; const duration = ytPlayer.getDuration(); ytPlayer.seekTo((seekBar.value/100)*duration,true); }
+
+// Initial theme
+applyTheme(themes[themeSelect.value]);
+
+</script>
+
+</body>
+</html>
+
+
+
