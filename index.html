@@ -673,18 +673,34 @@ seekBar.addEventListener("mousemove", e => {
         label = "Nyāsah";
     }
     else if (verseIndex >= DHYANA_START && verseIndex <= DHYANA_END) {
-        label = `Dhyānam ${verseIndex - DHYANA_START + 1}`;
+        // Skip first Dhyaanam
+        if (verseIndex === DHYANA_START) return;
+        // Skip last Dhyaanam
+        if (verseIndex === DHYANA_END) return;
+
+        // Current Dhyaanam 2 becomes "Dhyaanam"
+        if (verseIndex === DHYANA_START + 1) {
+            label = "Dhyaanam";
+        } else {
+            // Current Dhyaanam 3 → Dhyaanam 1, 4 → 2, etc.
+            label = `Dhyaanam ${verseIndex - (DHYANA_START + 1)}`;
+        }
     }
     else if (verseIndex >= SAHASRA_START) {
-        label = `Verse ${verseIndex - SAHASRA_START + 1}`;
+        const verseNum = verseIndex - SAHASRA_START + 1;
+
+        if (verseNum > 183) return; // stop at 183
+
+        label = `Verse ${verseNum}`;
     }
+
+    if (!label) return;
 
     seekTooltip.innerText = `${label} — click to jump`;
     seekTooltip.style.left = `${e.clientX}px`;
     seekTooltip.style.top = `${rect.top}px`;
     seekTooltip.style.opacity = 1;
 });
-
 seekBar.addEventListener("mouseleave", () => {
     seekTooltip.style.opacity = 0;
 });
