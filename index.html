@@ -616,12 +616,24 @@ function buildJumpMenu() {
             label = "Nyāsah";
         } 
         else if (i >= DHYANA_START && i <= DHYANA_END) {
-            label = `Dhyānam ${i - DHYANA_START + 1}`;
+            // Skip first Dhyaanam
+            if (i === DHYANA_START) return;
+
+            // Skip last Dhyaanam
+            if (i === DHYANA_END) return;
+
+            // Current Dhyaanam 2 becomes "Dhyaanam"
+            if (i === DHYANA_START + 1) {
+                label = "Dhyaanam";
+            } else {
+                // Current Dhyaanam 3 → Dhyaanam 1, 4 → 2, etc.
+                label = `Dhyaanam ${i - (DHYANA_START + 1)}`;
+            }
         } 
         else if (i >= SAHASRA_START) {
             const verseNum = i - SAHASRA_START + 1;
 
-            if (verseNum > 183) return;   // ⛔ stop at 183
+            if (verseNum > 183) return;   // stop at 183
 
             label = `Verse ${verseNum}`;
         } 
